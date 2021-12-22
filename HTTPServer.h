@@ -1,5 +1,7 @@
 #ifndef HTTP_SERVER_H
 #define HTTP_SERVER_H
+#include "HTTPConnection.h"
+#include "HTTPServer.h"
 
 #include <sys/socket.h>
 #include <stdexcept>
@@ -7,7 +9,7 @@
 #include <netinet/in.h>
 #include "defines.h"
 #include <stdio.h>
-#include <unistd.h>
+#include <string.h>
 #include <vector>
 #include "HTTPConnection.h"
 class HTTPServer
@@ -15,7 +17,7 @@ class HTTPServer
 private:
     int in_sock;
     uint16_t port;
-    std::vector<HTTPConnection> connections;
+    std::vector<HTTPConnection*> connections;
 
     void CreateListeningSocket()
     {
@@ -57,9 +59,13 @@ private:
         }
 
         sockaddr_in s_addr_in;
-        socklen_t size_addr;
+        socklen_t size_addr = sizeof(s_addr_in);
+        memset(&s_addr_in, 0, size_addr);
         getsockname(this->in_sock, (struct sockaddr *)&s_addr_in, &size_addr);
-        std::cout << SINFO_PREFIX << "Socket listening to port " << port
+        
+        this->port = this->port == 0 ? ntohs(s_addr_in.sin_port):this->port;
+
+        std::cout << SINFO_PREFIX << "Socket listening to port " << this->port
                   << " on all possible addresses. " << std::endl;
     }
     void WaitForConnections()
@@ -77,7 +83,7 @@ private:
             }
             else
             {
-                this->connections.push_back(*(new HTTPConnection(new_conn_sock)));
+                this->connections.push_back(new HTTPConnection(new_conn_sock));
             }
         }
     }
@@ -99,6 +105,9 @@ HTTPServer::HTTPServer()
 
 HTTPServer::~HTTPServer()
 {
+    for (auto connection:this->connections){
+        delete connection;
+    }
 }
 HTTPServer::HTTPServer(const uint16_t &port)
 {
