@@ -1,3 +1,6 @@
+#ifndef HTTP_SERVER_H
+#define HTTP_SERVER_H
+
 #include <sys/socket.h>
 #include <stdexcept>
 #include <iostream>
@@ -5,12 +8,14 @@
 #include "defines.h"
 #include <stdio.h>
 #include <unistd.h>
-
+#include <vector>
+#include "HTTPConnection.h"
 class HTTPServer
 {
 private:
     int in_sock;
     uint16_t port;
+    std::vector<HTTPConnection> connections;
 
     void CreateListeningSocket()
     {
@@ -72,27 +77,7 @@ private:
             }
             else
             {
-                // be sure that we producing null-terminated cstring
-                char buffer[MAX_CHUNK_SIZE + 1] = {0};
-                int read_size = 0;
-                std::cout << SINFO_PREFIX << "Accepting new connection." << std::endl;
-                // while not EOF recieving chunks of request
-                while (read_size = read(new_conn_sock, &buffer, MAX_CHUNK_SIZE) > 0)
-                {
-                    std::cout << SINFO_PREFIX << "Chunk recieved[" << read_size << "]" << std::endl;
-                    std::cout << buffer;
-                }
-                if (read_size == -1)
-                {
-                    std::cout << SERR_PREFIX << "Error happened while recieving request chunk. Errno = "
-                              << errno << std::endl;
-                }
-                std::cout << std::endl;
-                if (shutdown(new_conn_sock, SHUT_RDWR) == -1)
-                {
-                    std::cout << "Error while shutdown incoming socket. Errno = "
-                              << errno << std::endl;
-                }
+                this->connections.push_back(*(new HTTPConnection(new_conn_sock)));
             }
         }
     }
@@ -119,3 +104,4 @@ HTTPServer::HTTPServer(const uint16_t &port)
 {
     this->port = port;
 }
+#endif

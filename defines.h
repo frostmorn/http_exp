@@ -1,3 +1,5 @@
+#ifndef DEFINES_H
+#define DEFINES_H
 #include "third_party/ANSI-color-codes.h"
 
 #define EXIT_CODE_SOCK_CREATE_ERROR     -1
@@ -11,3 +13,4 @@
 
 #define SERR_PREFIX     RED     "ERROR:\t"  reset
 #define SINFO_PREFIX    GRN     "INFO:\t"   reset
+#endif
