@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include "HTTPRequest.h"
+#include <mutex>
 class HTTPConnection
 {
 private:
-    int sock_fd;  
+    int sock_fd;
+    std::mutex sock_mutex;  
     std::vector<HTTPRequest *> requests;
 public:
     HTTPConnection();
@@ -19,6 +21,7 @@ public:
         //Read();
     }
     void Read(){
+        this->sock_mutex.lock();
         // be sure that we producing null-terminated cstring
         std::string ReadData;
         char buffer[MAX_CHUNK_SIZE + 1] = {0};
@@ -39,18 +42,23 @@ public:
             this->~HTTPConnection();
         }
         std::cout << std::endl;
+
+        this->sock_mutex.unlock();
+    }
+    void Write(){
+        this->sock_mutex.lock();
+
+        this->sock_mutex.unlock();
+    }
+    void Close(){
+        this->sock_mutex.lock();
         if (shutdown(this->sock_fd, SHUT_RDWR) == -1)
         {
             std::cout << "Error while shutdown incoming socket. Errno = "
                         << errno << std::endl;
             this->~HTTPConnection();
         }
-    }
-    void Write(){
-
-    }
-    void Close(){
-
+        this->sock_mutex.unlock();
     }
     ~HTTPConnection();
 };
