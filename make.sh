@@ -1,2 +1,2 @@
 #!/usr/bin/sh
-g++ test.cpp -o test
+g++ HTTPServer.cpp HTTPConnection.cpp HTTPRequest.cpp test.cpp -o test
